@@ -14,7 +14,7 @@
         .version-badge { position: absolute; top: 0; right: 0; font-size: 0.7rem; color: #64748b; font-weight: bold; }
         
         .input-card { background: var(--card); padding: 18px; border-radius: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .label-text { font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; }
+        .label-text { font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; align-items: center; }
         
         .row { display: flex; gap: 8px; align-items: center; }
         input { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; font-size: 1.2rem; outline: none; }
@@ -26,6 +26,11 @@
         .btn-lock.locked { background: var(--danger); color: white; border-color: var(--danger); }
         .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 12px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
+        /* Collapsible Section */
+        .collapsible-trigger { cursor: pointer; color: var(--accent); font-size: 0.75rem; text-decoration: underline; }
+        #elapsedContainer { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
+        #elapsedContainer.show { display: block; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
         td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #1e293b; font-size: 1.1rem; font-weight: 600; }
@@ -55,7 +60,7 @@
     <div class="input-card">
         <div class="label-text">
             Time of Entry 
-            <span id="clockStatus" style="font-size: 0.7rem;">RUNNING</span>
+            <span id="clockStatus" style="font-size: 0.7rem;">CLOCK RUNNING</span>
         </div>
         <div class="row">
             <input type="time" id="entryTime" onchange="manualTimeChange()">
@@ -65,10 +70,16 @@
     </div>
 
     <div class="input-card">
-        <div class="label-text">Minutes Already Elapsed</div>
-        <div class="row">
-            <input type="number" id="elapsedMins" value="0" min="0">
-            <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
+        <div class="label-text">
+            Entry Adjustments
+            <span class="collapsible-trigger" id="toggleLink" onclick="toggleElapsed()">SHOW ELAPSED</span>
+        </div>
+        <div id="elapsedContainer">
+            <div class="label-text">Minutes Already Elapsed</div>
+            <div class="row">
+                <input type="number" id="elapsedMins" value="0" min="0">
+                <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
+            </div>
         </div>
     </div>
 
@@ -110,8 +121,20 @@
     const elapsedInput = document.getElementById('elapsedMins');
     const lockBtn = document.getElementById('lockBtn');
     const statusText = document.getElementById('clockStatus');
+    const elapsedContainer = document.getElementById('elapsedContainer');
+    const toggleLink = document.getElementById('toggleLink');
 
-    // Ticks the clock forward every minute
+    function toggleElapsed() {
+        const isHidden = elapsedContainer.style.display === "none" || elapsedContainer.style.display === "";
+        if (isHidden) {
+            elapsedContainer.style.display = "block";
+            toggleLink.innerText = "HIDE ELAPSED";
+        } else {
+            elapsedContainer.style.display = "none";
+            toggleLink.innerText = "SHOW ELAPSED";
+        }
+    }
+
     function tickClock() {
         if (!isLocked && entryInput.value) {
             let [hrs, mins] = entryInput.value.split(':').map(Number);
@@ -126,26 +149,22 @@
         const now = new Date();
         entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         renderTable();
-        // If it was locked, unlocking it on "NOW" usually feels more intuitive
         if (isLocked) toggleLock(); 
     }
 
-    function manualTimeChange() {
-        // Keeps it ticking from the user's manual time unless they lock it
-        renderTable();
-    }
+    function manualTimeChange() { renderTable(); }
 
     function toggleLock() {
         isLocked = !isLocked;
         if (isLocked) {
             lockBtn.innerText = "UNLOCK";
             lockBtn.classList.add('locked');
-            statusText.innerText = "LOCKED";
+            statusText.innerText = "CLOCK LOCKED";
             statusText.style.color = "var(--danger)";
         } else {
             lockBtn.innerText = "LOCK";
             lockBtn.classList.remove('locked');
-            statusText.innerText = "RUNNING";
+            statusText.innerText = "CLOCK RUNNING";
             statusText.style.color = "var(--success)";
         }
     }
@@ -176,13 +195,11 @@
         abbreviations.forEach(item => { abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; });
     }
 
-    // Interval set to 60 seconds (60000ms) to tick the minute forward
     setInterval(tickClock, 60000);
-    
     elapsedInput.addEventListener('input', renderTable);
     
     window.onload = () => { 
-        syncWithNow(); // Set initial time
+        syncWithNow();
         loadAbbr(); 
         statusText.style.color = "var(--success)";
     };
@@ -190,3 +207,4 @@
 
 </body>
 </html>
+
