@@ -10,8 +10,11 @@
     <style>
         :root { --bg: #0b1120; --card: #1e293b; --accent: #3b82f6; --text: #ffffff; --gold: #f59e0b; --border: #334155; --danger: #ef4444; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; }
+        .container { max-width: 500px; margin: auto; position: relative; }
         
+        /* Version Badge */
+        .version-badge { position: absolute; top: 0; right: 0; font-size: 0.7rem; color: #64748b; font-weight: bold; }
+
         .input-card { background: var(--card); padding: 18px; border-radius: 15px; margin-bottom: 12px; border: 1px solid var(--border); }
         .label-text { font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
         
@@ -34,10 +37,12 @@
 
         .min-pressure-row td { color: var(--danger) !important; border-bottom: 1px solid var(--danger); }
 
-        .spec-box { margin: 15px 0; padding: 10px; text-align: center; font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 10px; color: #94a3b8; }
+        .spec-box { margin: 15px 0; padding: 10px; text-align: center; font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 10px; color: #94a3b8; line-height: 1.5; }
         .re-entry-warning { color: var(--danger); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
 
-        .disclaimer { margin-top: 40px; padding: 15px; border-top: 1px solid var(--border); color: #64748b; font-size: 0.75rem; text-align: center; line-height: 1.4; }
+        .manual-btn { display: inline-flex; align-items: center; justify-content: center; background: var(--card); color: var(--accent); border: 1px solid var(--accent); padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; margin: 20px 0; width: 100%; box-sizing: border-box; }
+
+        .disclaimer { margin-top: 20px; padding: 15px; border-top: 1px solid var(--border); color: #64748b; font-size: 0.75rem; text-align: center; line-height: 1.4; }
 
         .aide-section { margin-top: 40px; padding-top: 20px; }
         .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; }
@@ -49,6 +54,7 @@
 <body>
 
 <div class="container">
+    <div class="version-badge">V1.02</div>
     <h2>BA Calculator</h2>
     
     <div class="input-card">
@@ -82,7 +88,8 @@
     <div class="spec-box">
         <span class="re-entry-warning">160 BAR for re-entry only</span>
         Based on 65 BAR whistle @ 50L/Min rate<br>
-        300 BAR X 9L cylinder
+        300 BAR X 9L cylinder<br>
+        <em>TAP = (Pressure / 2) + 30 BAR</em>
     </div>
 
     <div class="aide-section">
@@ -98,6 +105,12 @@
             </thead>
             <tbody id="abbrBody"></tbody>
         </table>
+    </div>
+
+    <div style="text-align: center;">
+        <a href="manual.pdf" target="_blank" class="manual-btn">
+            <span style="margin-right: 8px; font-size: 1.2rem;">ⓘ</span> VIEW USER MANUAL (PDF)
+        </a>
     </div>
 
     <div class="disclaimer">
@@ -122,7 +135,6 @@
     const entryInput = document.getElementById('entryTime');
     const elapsedInput = document.getElementById('elapsedMins');
 
-    // This function only runs when YOU press the button
     function stampCurrentTime() {
         const now = new Date();
         entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
@@ -143,7 +155,7 @@
         const elapsed = parseInt(elapsedInput.value) || 0;
 
         baData.forEach(row => {
-            const tap = (row.bar / 2) + 40; 
+            const tap = (row.bar / 2) + 30; 
             const calculationDur = Math.max(0, row.dur - elapsed);
             
             const time = new Date();
@@ -173,11 +185,7 @@
 
     entryInput.addEventListener('change', renderTable);
     elapsedInput.addEventListener('input', renderTable);
-
-    window.onload = function() {
-        // We no longer auto-set the time here, so it doesn't move after you set it.
-        loadAbbr();
-    };
+    window.onload = loadAbbr;
 </script>
 
 </body>
