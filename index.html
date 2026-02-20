@@ -65,7 +65,7 @@
             <span id="clockStatus" style="font-size: 0.7rem;">CLOCK RUNNING</span>
         </div>
         <div class="row">
-            <input type="time" id="entryTime">
+            <input type="time" id="entryTime" oninput="renderTable()" onchange="renderTable()" onblur="renderTable()">
             <button class="btn-blue" onclick="syncWithNow()">NOW</button>
             <button class="btn-lock" id="lockBtn" onclick="toggleLock()">LOCK</button>
         </div>
@@ -79,7 +79,7 @@
         <div id="elapsedContainer">
             <div class="label-text" style="margin-top:10px;">Minutes Already Elapsed</div>
             <div class="row">
-                <input type="number" id="elapsedMins" value="0" min="0">
+                <input type="number" id="elapsedMins" value="0" min="0" oninput="renderTable()">
                 <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
             </div>
         </div>
@@ -143,11 +143,11 @@
     function syncWithNow() {
         const now = new Date();
         entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        // If it was locked, keep it locked. If running, keep it running.
         renderTable();
     }
 
     function tickClock() {
+        // Ticking logic: only advances if not locked
         if (!isLocked && entryInput.value) {
             let [hrs, mins] = entryInput.value.split(':').map(Number);
             mins++;
@@ -212,15 +212,12 @@
         });
     }
 
-    // Event Listeners
-    entryInput.addEventListener('input', renderTable); // Just update table, don't lock
-    elapsedInput.addEventListener('input', renderTable);
-
     // Initial Load
     window.onload = () => { 
         syncWithNow(); 
         loadAbbr();
         statusText.style.color = "var(--success)";
+        // Set up the interval once
         setInterval(tickClock, 60000); 
     };
 </script>
