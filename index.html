@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BA Calculator & Aide Memoire</title>
+    <title>BA Calculator</title>
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="manifest" href="manifest.json">
@@ -16,9 +16,9 @@
         .label-text { font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
         
         .row { display: flex; gap: 10px; align-items: center; }
-        input { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; font-size: 1.2rem; }
+        input { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; font-size: 1.2rem; outline: none; }
         input[type="time"] { flex-grow: 1; }
-        input[type="number"] { flex-grow: 1; text-align: center; }
+        input[type="number"] { width: 100px; text-align: center; }
         
         .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 12px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -28,4 +28,141 @@
         td { padding: 14px 8px; text-align: center; border-bottom: 1px solid #1e293b; font-size: 1.1rem; font-weight: 600; }
         
         .tap-col { color: var(--gold); }
-        .dur-col { color: #94a3b8; font-weight: 400; font-size: 0.95rem;
+        .dur-col { color: #94a3b8; font-weight: 400; font-size: 0.95rem; }
+        .tow-col { color: var(--accent); }
+
+        .aide-section { margin-top: 40px; border-top: 2px solid var(--border); padding-top: 20px; }
+        .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; }
+        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-bottom: 30px; }
+        .abbr-table td { text-align: left; padding: 12px; font-weight: normal; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .abbr-table .code { font-weight: bold; color: var(--accent); width: 35%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>BA Calculator</h2>
+    
+    <div class="input-card">
+        <div class="label-text">Time of Entry</div>
+        <div class="row">
+            <input type="time" id="entryTime">
+            <button class="btn-blue" onclick="setCurrentTime()">NOW</button>
+        </div>
+    </div>
+
+    <div class="input-card">
+        <div class="label-text">Minutes Already Elapsed</div>
+        <div class="row">
+            <input type="number" id="elapsedMins" value="0" min="0">
+            <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>BAR</th>
+                <th>TAP</th>
+                <th>DUR</th>
+                <th>TOW</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="aide-section">
+        <h3>Aide Memoire</h3>
+        <img src="20486.png" alt="Aide Memoire" class="aide-image">
+        
+        <table class="abbr-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding-left: 12px;">ABBR.</th>
+                    <th style="text-align: left;">MEANING</th>
+                </tr>
+            </thead>
+            <tbody id="abbrBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Data matched to user requirement
+    const baData = [
+        { bar: 300, dur: 38 }, { bar: 290, dur: 37 }, { bar: 280, dur: 35 },
+        { bar: 270, dur: 33 }, { bar: 260, dur: 32 }, { bar: 250, dur: 30 },
+        { bar: 240, dur: 28 }, { bar: 160, dur: 16 }
+    ];
+
+    // Abbreviations list from source
+    const abbreviations = [
+        ["FFT", "Fire Fighting Team"], ["HRJ", "Hose Reel Jet"], ["J", "Main Jet (45/70mm)"],
+        ["LH / RH", "Left/Right Hand"], ["SRT", "Search and Rescue Team"], ["TIC", "Thermal Image Camera"],
+        ["TAP", "Turn Around Pressure"], ["A1, A2...", "Team Alpha One etc."], ["B1, B2...", "Team Bravo One etc."],
+        ["CL", "Casualty Located"], ["TL", "Team Leader"], ["COMMS", "Radio Communications"], ["RE", "Re-Entry"]
+    ];
+
+    const entryInput = document.getElementById('entryTime');
+    const elapsedInput = document.getElementById('elapsedMins');
+
+    function setCurrentTime() {
+        const now = new Date();
+        entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        renderTable();
+    }
+
+    function resetElapsed() {
+        elapsedInput.value = 0;
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        if (!entryInput.value) return;
+
+        const [hrs, mins] = entryInput.value.split(':').map(Number);
+        const elapsed = parseInt(elapsedInput.value) || 0;
+
+        baData.forEach(row => {
+            // TAP is (Pressure / 2) + 40
+            const tap = (row.bar / 2) + 40; 
+            // Subtract elapsed time from baseline duration
+            const remainingDur = Math.max(0, row.dur - elapsed);
+            
+            const time = new Date();
+            time.setHours(hrs, mins + remainingDur);
+            const tow = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${row.bar}</td>
+                    <td class="tap-col">${tap}</td>
+                    <td class="dur-col">${remainingDur}m</td>
+                    <td class="tow-col">${tow}</td>
+                </tr>`;
+        });
+    }
+
+    function loadAbbr() {
+        const abbrBody = document.getElementById('abbrBody');
+        abbrBody.innerHTML = ''; 
+        abbreviations.forEach(item => {
+            abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`;
+        });
+    }
+
+    // Event listeners
+    entryInput.addEventListener('change', renderTable);
+    elapsedInput.addEventListener('input', renderTable);
+
+    // Initial load
+    window.onload = function() {
+        setCurrentTime();
+        loadAbbr();
+    };
+</script>
+
+</body>
+</html>
