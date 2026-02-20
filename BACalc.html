@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BA Calculator & Aide Memoire</title>
+	<link rel="apple-touch-icon" href="icon.png"> 
+	<link rel="icon" type="image/png" href="icon.png">
+
+    <style>
+        :root { --bg: #0b1120; --card: #1e293b; --accent: #3b82f6; --text: #ffffff; --gold: #f59e0b; --border: #334155; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: auto; }
+        
+        .input-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .time-row { display: flex; align-items: center; gap: 10px; }
+        input[type="time"] { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; flex-grow: 1; font-size: 1.2rem; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 8px; text-align: center; border-bottom: 1px solid #1e293b; font-size: 1.1rem; font-weight: 600; }
+        
+        .tap-col { color: var(--gold); }
+        .dur-col { color: #94a3b8; font-weight: 400; font-size: 0.9rem; }
+        .tow-col { color: var(--accent); }
+
+        .aide-section { margin-top: 40px; border-top: 2px solid var(--border); padding-top: 20px; }
+        .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; font-size: 0.9rem; }
+        .abbr-table td { text-align: left; padding: 12px 15px; font-weight: normal; border-bottom: 1px solid var(--border); }
+        .abbr-table .code { font-weight: bold; color: var(--accent); width: 30%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>BA Calculator</h2>
+    
+    <div class="input-card">
+        <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">Time of Entry</div>
+        <div class="time-row">
+            <input type="time" id="entryTime">
+            <button onclick="setCurrentTime()">🔄 NOW</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>BAR</th>
+                <th>TAP</th>
+                <th>DUR</th>
+                <th>TOW</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="aide-section">
+        <h3>Aide Memoire</h3>
+        <img src="20486.png" alt="BA Board Instructions" class="aide-image">
+        
+        <table class="abbr-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding-left: 15px;">ABBR.</th>
+                    <th style="text-align: left;">MEANING</th>
+                </tr>
+            </thead>
+            <tbody>
+               <tr><td class="code">FFT</td><td>Fire Fighting Team</td></tr>
+		<tr><td class="code">SRT</td><td>Search and Rescue Team</td></tr>
+		<tr><td class="code">TL</td><td>Team Leader</td></tr>
+		<tr><td class="code">A1, A2, A3 etc</td><td>Team Alpha One etc</td></tr>
+		<tr><td class="code">B1, B2, B3 etc</td><td>Team Bravo One etc</td></tr>
+		<tr><td class="code">LH / RH</td><td>Left/Right Hand</td></tr>
+                <tr><td class="code">HRJ</td><td>Hose Reel Jet</td></tr>
+                <tr><td class="code">J</td><td>Main Jet (45mm/70mm)</td></tr>
+                <tr><td class="code">Comms D3</td><td>Radio & Channel</td></tr>
+                <tr><td class="code">TIC</td><td>Thermal Image Camera</td></tr>
+                <tr><td class="code">CL</td><td>Casualty Located</td></tr>
+                <tr><td class="code">RE</td><td>Re-Entry</td></tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Hardcoded data to match your specific duration table exactly
+    const baData = [
+        { bar: 300, dur: 38 },
+        { bar: 290, dur: 37 },
+        { bar: 280, dur: 35 },
+        { bar: 270, dur: 33 },
+        { bar: 260, dur: 32 },
+        { bar: 250, dur: 30 },
+        { bar: 240, dur: 28 },
+        { bar: 160, dur: 16 }
+    ];
+
+    const entryInput = document.getElementById('entryTime');
+
+    function setCurrentTime() {
+        const now = new Date();
+        entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        if (!entryInput.value) return;
+
+        const [hrs, mins] = entryInput.value.split(':').map(Number);
+
+        baData.forEach(row => {
+            // TAP = (Pressure / 2) + 40
+            const tap = (row.bar / 2) + 40;
+            
+            // Time Of Whistle calculation
+            const time = new Date();
+            time.setHours(hrs, mins + row.dur);
+            const tow = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${row.bar}</td>
+                    <td class="tap-col">${tap}</td>
+                    <td class="dur-col">${row.dur}m</td>
+                    <td class="tow-col">${tow}</td>
+                </tr>`;
+        });
+    }
+
+    entryInput.addEventListener('change', renderTable);
+    window.onload = setCurrentTime;
+</script>
+
+</body>
+</html>
