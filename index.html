@@ -42,9 +42,8 @@
         .spec-box { margin: 15px 0; padding: 10px; text-align: center; font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 10px; color: #94a3b8; line-height: 1.5; }
         .re-entry-warning { color: var(--danger); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
 
-        /* AIDE MEMOIRE IMAGE STYLING */
         .aide-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
-        .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; }
 
         .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-top: 10px; border: 1px solid var(--border); }
         .abbr-table td { text-align: left; padding: 10px 12px; font-weight: normal; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
@@ -66,7 +65,7 @@
             <span id="clockStatus" style="font-size: 0.7rem;">CLOCK RUNNING</span>
         </div>
         <div class="row">
-            <input type="time" id="entryTime" onchange="manualTimeChange()">
+            <input type="time" id="entryTime">
             <button class="btn-blue" onclick="syncWithNow()">NOW</button>
             <button class="btn-lock" id="lockBtn" onclick="toggleLock()">LOCK</button>
         </div>
@@ -78,7 +77,7 @@
             <span class="collapsible-trigger" id="toggleLink" onclick="toggleElapsed()">SHOW ELAPSED</span>
         </div>
         <div id="elapsedContainer">
-            <div class="label-text">Minutes Already Elapsed</div>
+            <div class="label-text" style="margin-top:10px;">Minutes Already Elapsed</div>
             <div class="row">
                 <input type="number" id="elapsedMins" value="0" min="0">
                 <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
@@ -115,12 +114,16 @@
     </div>
 
     <div class="disclaimer">
-        <strong>DISCLAIMER:</strong> Personal training use only. No responsibility taken for accuracy or suitability at incidents. May not reflect current policy.
+        <strong>DISCLAIMER:</strong> Personal training use only. No responsibility taken for accuracy or suitability at incidents.
     </div>
 </div>
 
 <script>
-    const baData = [{bar:300,dur:38},{bar:290,dur:37},{bar:280,dur:35},{bar:270,dur:33},{bar:260,dur:32},{bar:250,dur:30},{bar:240,dur:28},{bar:160,dur:16}];
+    const baData = [
+        {bar: 300, dur: 38}, {bar: 290, dur: 37}, {bar: 280, dur: 35},
+        {bar: 270, dur: 33}, {bar: 260, dur: 32}, {bar: 250, dur: 30},
+        {bar: 240, dur: 28}, {bar: 160, dur: 16}
+    ];
     
     const abbreviations = [
         ["FFT", "Fire Fighting Team"],["SRT", "Search & Rescue Team"], ["LH / RH", "Left / Right Hand"],
@@ -137,10 +140,11 @@
     const elapsedContainer = document.getElementById('elapsedContainer');
     const toggleLink = document.getElementById('toggleLink');
 
-    function toggleElapsed() {
-        const isHidden = elapsedContainer.style.display === "none" || elapsedContainer.style.display === "";
-        elapsedContainer.style.display = isHidden ? "block" : "none";
-        toggleLink.innerText = isHidden ? "HIDE ELAPSED" : "SHOW ELAPSED";
+    function syncWithNow() {
+        const now = new Date();
+        entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        if (isLocked) toggleLock(); 
+        renderTable();
     }
 
     function tickClock() {
@@ -153,15 +157,6 @@
         }
     }
 
-    function syncWithNow() {
-        const now = new Date();
-        entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        renderTable();
-        if (isLocked) toggleLock(); 
-    }
-
-    function manualTimeChange() { renderTable(); }
-
     function toggleLock() {
         isLocked = !isLocked;
         lockBtn.innerText = isLocked ? "UNLOCK" : "LOCK";
@@ -170,12 +165,22 @@
         statusText.style.color = isLocked ? "var(--danger)" : "var(--success)";
     }
 
-    function resetElapsed() { elapsedInput.value = 0; renderTable(); }
+    function toggleElapsed() {
+        const isHidden = elapsedContainer.style.display === "none" || elapsedContainer.style.display === "";
+        elapsedContainer.style.display = isHidden ? "block" : "none";
+        toggleLink.innerText = isHidden ? "HIDE ELAPSED" : "SHOW ELAPSED";
+    }
+
+    function resetElapsed() {
+        elapsedInput.value = 0;
+        renderTable();
+    }
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         if (!entryInput.value) return;
+
         const [hrs, mins] = entryInput.value.split(':').map(Number);
         const elapsed = parseInt(elapsedInput.value) || 0;
 
@@ -184,7 +189,44 @@
             const calcDur = Math.max(0, row.dur - elapsed);
             const time = new Date();
             time.setHours(hrs, mins + calcDur);
+            
             const towStr = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
             const adj = elapsed > 0 ? '<span class="adj-label">(Adj.)</span>' : '';
             const rowClass = row.bar === 160 ? 'class="min-pressure-row"' : '';
-            tbody.innerHTML += `<tr ${rowClass}><td>${row.bar}</td><td class="tap-col">${tap}</td><td class="dur-col">${row.dur}m</td><td class="tow-col">${towStr}${adj
+
+            tbody.innerHTML += `
+                <tr ${rowClass}>
+                    <td>${row.bar}</td>
+                    <td class="tap-col">${tap}</td>
+                    <td class="dur-col">${row.dur}m</td>
+                    <td class="tow-col">${towStr}${adj}</td>
+                </tr>`;
+        });
+    }
+
+    function loadAbbr() {
+        const abbrBody = document.getElementById('abbrBody');
+        abbrBody.innerHTML = '';
+        abbreviations.forEach(item => { 
+            abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; 
+        });
+    }
+
+    // Event Listeners
+    entryInput.addEventListener('input', () => {
+        if (!isLocked) toggleLock(); // Lock clock if user manually edits time
+        renderTable();
+    });
+    elapsedInput.addEventListener('input', renderTable);
+
+    // Initial Load
+    window.onload = () => { 
+        syncWithNow(); 
+        loadAbbr();
+        statusText.style.color = "var(--success)";
+        setInterval(tickClock, 60000); // Start the 60s ticker
+    };
+</script>
+
+</body>
+</html>
