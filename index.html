@@ -26,10 +26,8 @@
         .btn-lock.locked { background: var(--danger); color: white; border-color: var(--danger); }
         .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 12px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        /* Collapsible Section */
         .collapsible-trigger { cursor: pointer; color: var(--accent); font-size: 0.75rem; text-decoration: underline; }
         #elapsedContainer { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
-        #elapsedContainer.show { display: block; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
@@ -40,15 +38,17 @@
         .tow-col { color: var(--accent); }
         .adj-label { font-size: 0.7rem; color: var(--gold); vertical-align: middle; margin-left: 4px; font-weight: normal; }
         .min-pressure-row td { color: var(--danger) !important; border-bottom: 1px solid var(--danger); }
+
         .spec-box { margin: 15px 0; padding: 10px; text-align: center; font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 10px; color: #94a3b8; line-height: 1.5; }
         .re-entry-warning { color: var(--danger); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
+
+        .aide-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-top: 10px; border: 1px solid var(--border); }
+        .abbr-table td { text-align: left; padding: 10px 12px; font-weight: normal; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .abbr-table .code { font-weight: bold; color: var(--accent); width: 30%; border-right: 1px solid var(--border); }
+
         .manual-btn { display: inline-flex; align-items: center; justify-content: center; background: var(--card); color: var(--accent); border: 1px solid var(--accent); padding: 12px 25px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; margin: 20px 0; width: 100%; box-sizing: border-box; }
-        .disclaimer { margin-top: 20px; padding: 15px; border-top: 1px solid var(--border); color: #64748b; font-size: 0.75rem; text-align: center; line-height: 1.4; }
-        .aide-section { margin-top: 40px; padding-top: 20px; }
-        .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; }
-        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-bottom: 10px; }
-        .abbr-table td { text-align: left; padding: 12px; font-weight: normal; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        .abbr-table .code { font-weight: bold; color: var(--accent); width: 35%; }
+        .disclaimer { margin-top: 20px; padding: 15px; border-top: 1px solid var(--border); color: #64748b; font-size: 0.7rem; text-align: center; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -59,7 +59,7 @@
     
     <div class="input-card">
         <div class="label-text">
-            Time of Entry 
+            ENTRY CONTROL TIME 
             <span id="clockStatus" style="font-size: 0.7rem;">CLOCK RUNNING</span>
         </div>
         <div class="row">
@@ -98,9 +98,10 @@
     </div>
 
     <div class="aide-section">
-        <h3>Aide Memoire</h3>
-        <img src="20486.png" alt="Aide Memoire" class="aide-image">
-        <table class="abbr-table"><tbody id="abbrBody"></tbody></table>
+        <h3>Operational Abbreviations</h3>
+        <table class="abbr-table">
+            <tbody id="abbrBody"></tbody>
+        </table>
     </div>
 
     <div style="text-align: center;">
@@ -108,13 +109,19 @@
     </div>
 
     <div class="disclaimer">
-        <strong>DISCLAIMER:</strong> This app was written for personal use and training. It is not a substitute for proper training or official policy.
+        <strong>DISCLAIMER:</strong> Personal training use only. No responsibility taken for accuracy or suitability at incidents. May not reflect current policy.
     </div>
 </div>
 
 <script>
     const baData = [{bar:300,dur:38},{bar:290,dur:37},{bar:280,dur:35},{bar:270,dur:33},{bar:260,dur:32},{bar:250,dur:30},{bar:240,dur:28},{bar:160,dur:16}];
-    const abbreviations = [["FFT","Fire Fighting Team"],["HRJ","Hose Reel Jet"],["J","Main Jet"],["SRT","Search and Rescue"],["TAP","Turn Around Pressure"],["CL","Casualty Located"],["RE","Re-Entry"]];
+    
+    const abbreviations = [
+        ["FFT", "Fire Fighting Team"], ["HRJ", "Hose Reel Jet"], ["J", "Main Jet (45/70mm)"],
+        ["LH / RH", "Left / Right Hand"], ["SRT", "Search & Rescue Team"], ["TIC", "Thermal Image Camera"],
+        ["TAP", "Turn Around Pressure"], ["A1, A2...", "Team Alpha 1, 2 etc."], ["B1, B2...", "Team Bravo 1, 2 etc."],
+        ["CL", "Casualty Located"], ["TL", "Team Leader"], ["COMMS", "Radio Communications"], ["RE", "Re-Entry"]
+    ];
 
     let isLocked = false;
     const entryInput = document.getElementById('entryTime');
@@ -126,13 +133,8 @@
 
     function toggleElapsed() {
         const isHidden = elapsedContainer.style.display === "none" || elapsedContainer.style.display === "";
-        if (isHidden) {
-            elapsedContainer.style.display = "block";
-            toggleLink.innerText = "HIDE ELAPSED";
-        } else {
-            elapsedContainer.style.display = "none";
-            toggleLink.innerText = "SHOW ELAPSED";
-        }
+        elapsedContainer.style.display = isHidden ? "block" : "none";
+        toggleLink.innerText = isHidden ? "HIDE ELAPSED" : "SHOW ELAPSED";
     }
 
     function tickClock() {
@@ -156,17 +158,10 @@
 
     function toggleLock() {
         isLocked = !isLocked;
-        if (isLocked) {
-            lockBtn.innerText = "UNLOCK";
-            lockBtn.classList.add('locked');
-            statusText.innerText = "CLOCK LOCKED";
-            statusText.style.color = "var(--danger)";
-        } else {
-            lockBtn.innerText = "LOCK";
-            lockBtn.classList.remove('locked');
-            statusText.innerText = "CLOCK RUNNING";
-            statusText.style.color = "var(--success)";
-        }
+        lockBtn.innerText = isLocked ? "UNLOCK" : "LOCK";
+        lockBtn.classList.toggle('locked', isLocked);
+        statusText.innerText = isLocked ? "CLOCK LOCKED" : "CLOCK RUNNING";
+        statusText.style.color = isLocked ? "var(--danger)" : "var(--success)";
     }
 
     function resetElapsed() { elapsedInput.value = 0; renderTable(); }
@@ -192,7 +187,9 @@
 
     function loadAbbr() {
         const abbrBody = document.getElementById('abbrBody');
-        abbreviations.forEach(item => { abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; });
+        abbreviations.forEach(item => { 
+            abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; 
+        });
     }
 
     setInterval(tickClock, 60000);
@@ -207,4 +204,3 @@
 
 </body>
 </html>
-
