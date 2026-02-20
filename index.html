@@ -17,7 +17,7 @@
         
         .row { display: flex; gap: 10px; align-items: center; }
         input { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; font-size: 1.2rem; outline: none; }
-        input[type="time"] { flex-grow: 1; }
+        input[type="time"] { flex-grow: 1; color-scheme: dark; }
         input[type="number"] { width: 100px; text-align: center; }
         
         .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -30,17 +30,18 @@
         .tap-col { color: var(--gold); }
         .dur-col { color: #94a3b8; font-weight: 400; font-size: 0.95rem; }
         .tow-col { color: var(--accent); }
-        .adj-label { font-size: 0.7rem; color: var(--gold); vertical-align: middle; margin-left: 4px; }
+        .adj-label { font-size: 0.7rem; color: var(--gold); vertical-align: middle; margin-left: 4px; font-weight: normal; }
 
-        .min-pressure-row { color: var(--danger) !important; }
         .min-pressure-row td { color: var(--danger) !important; border-bottom: 1px solid var(--danger); }
 
         .spec-box { margin: 15px 0; padding: 10px; text-align: center; font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 10px; color: #94a3b8; }
         .re-entry-warning { color: var(--danger); font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; }
 
-        .aide-section { margin-top: 40px; border-top: 2px solid var(--border); padding-top: 20px; }
+        .disclaimer { margin-top: 40px; padding: 15px; border-top: 1px solid var(--border); color: #64748b; font-size: 0.75rem; text-align: center; line-height: 1.4; }
+
+        .aide-section { margin-top: 40px; padding-top: 20px; }
         .aide-image { width: 100%; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: block; }
-        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-bottom: 30px; }
+        .abbr-table { background: var(--card); border-radius: 12px; overflow: hidden; width: 100%; margin-bottom: 10px; }
         .abbr-table td { text-align: left; padding: 12px; font-weight: normal; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         .abbr-table .code { font-weight: bold; color: var(--accent); width: 35%; }
     </style>
@@ -54,7 +55,7 @@
         <div class="label-text">Time of Entry</div>
         <div class="row">
             <input type="time" id="entryTime">
-            <button class="btn-blue" onclick="setCurrentTime()">NOW</button>
+            <button class="btn-blue" onclick="stampCurrentTime()">NOW</button>
         </div>
     </div>
 
@@ -98,6 +99,10 @@
             <tbody id="abbrBody"></tbody>
         </table>
     </div>
+
+    <div class="disclaimer">
+        <strong>DISCLAIMER:</strong> This app was written for personal use and to help colleagues with their development and training of BA entry control. The developer takes no responsibility for accuracy or suitability for use at incidents. It is not a substitute for proper training and may not reflect up to date policy.
+    </div>
 </div>
 
 <script>
@@ -117,7 +122,8 @@
     const entryInput = document.getElementById('entryTime');
     const elapsedInput = document.getElementById('elapsedMins');
 
-    function setCurrentTime() {
+    // This function only runs when YOU press the button
+    function stampCurrentTime() {
         const now = new Date();
         entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         renderTable();
@@ -137,18 +143,14 @@
         const elapsed = parseInt(elapsedInput.value) || 0;
 
         baData.forEach(row => {
-            // TAP logic stays static
             const tap = (row.bar / 2) + 40; 
-            
-            // Internal calculation for TOW
             const calculationDur = Math.max(0, row.dur - elapsed);
             
             const time = new Date();
             time.setHours(hrs, mins + calculationDur);
             const towStr = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
 
-            // Add (Adj.) label only if elapsed > 0
-            const adjLabel = elapsed > 0 ? '<span class="adj-label">Adj.</span>' : '';
+            const adjLabel = elapsed > 0 ? '<span class="adj-label">(Adj.)</span>' : '';
             const rowClass = row.bar === 160 ? 'class="min-pressure-row"' : '';
 
             tbody.innerHTML += `
@@ -173,7 +175,7 @@
     elapsedInput.addEventListener('input', renderTable);
 
     window.onload = function() {
-        setCurrentTime();
+        // We no longer auto-set the time here, so it doesn't move after you set it.
         loadAbbr();
     };
 </script>
