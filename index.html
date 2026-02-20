@@ -65,7 +65,7 @@
             <span id="clockStatus" style="font-size: 0.7rem;">CLOCK RUNNING</span>
         </div>
         <div class="row">
-            <input type="time" id="entryTime" oninput="renderTable()" onchange="renderTable()" onblur="renderTable()">
+            <input type="time" id="entryTime" step="60">
             <button class="btn-blue" onclick="syncWithNow()">NOW</button>
             <button class="btn-lock" id="lockBtn" onclick="toggleLock()">LOCK</button>
         </div>
@@ -79,7 +79,7 @@
         <div id="elapsedContainer">
             <div class="label-text" style="margin-top:10px;">Minutes Already Elapsed</div>
             <div class="row">
-                <input type="number" id="elapsedMins" value="0" min="0" oninput="renderTable()">
+                <input type="number" id="elapsedMins" value="0" min="0">
                 <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
             </div>
         </div>
@@ -137,17 +137,15 @@
     const elapsedInput = document.getElementById('elapsedMins');
     const lockBtn = document.getElementById('lockBtn');
     const statusText = document.getElementById('clockStatus');
-    const elapsedContainer = document.getElementById('elapsedContainer');
-    const toggleLink = document.getElementById('toggleLink');
 
     function syncWithNow() {
         const now = new Date();
-        entryInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const timeVal = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        entryInput.value = timeVal;
         renderTable();
     }
 
     function tickClock() {
-        // Ticking logic: only advances if not locked
         if (!isLocked && entryInput.value) {
             let [hrs, mins] = entryInput.value.split(':').map(Number);
             mins++;
@@ -166,9 +164,11 @@
     }
 
     function toggleElapsed() {
-        const isHidden = elapsedContainer.style.display === "none" || elapsedContainer.style.display === "";
-        elapsedContainer.style.display = isHidden ? "block" : "none";
-        toggleLink.innerText = isHidden ? "HIDE ELAPSED" : "SHOW ELAPSED";
+        const cont = document.getElementById('elapsedContainer');
+        const trigger = document.getElementById('toggleLink');
+        const isHidden = cont.style.display === "none" || cont.style.display === "";
+        cont.style.display = isHidden ? "block" : "none";
+        trigger.innerText = isHidden ? "HIDE ELAPSED" : "SHOW ELAPSED";
     }
 
     function resetElapsed() {
@@ -178,9 +178,9 @@
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
         if (!entryInput.value) return;
-
+        
+        tbody.innerHTML = '';
         const [hrs, mins] = entryInput.value.split(':').map(Number);
         const elapsed = parseInt(elapsedInput.value) || 0;
 
@@ -191,7 +191,7 @@
             time.setHours(hrs, mins + calcDur);
             
             const towStr = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
-            const adj = elapsed > 0 ? '<span class="adj-label">(Adj.)</span>' : '';
+            const adj = elapsed > 0 ? `<span class="adj-label">(Adj.)</span>` : '';
             const rowClass = row.bar === 160 ? 'class="min-pressure-row"' : '';
 
             tbody.innerHTML += `
@@ -204,20 +204,24 @@
         });
     }
 
-    function loadAbbr() {
+    // ANDROID COMPATIBILITY LISTENERS
+    // 'change' triggers when the Android Time Picker closes
+    entryInput.addEventListener('change', renderTable);
+    // 'input' triggers during keyboard entry
+    entryInput.addEventListener('input', renderTable);
+    // 'blur' is a fallback for when focus leaves the element
+    entryInput.addEventListener('blur', renderTable);
+    
+    elapsedInput.addEventListener('input', renderTable);
+
+    window.onload = () => { 
+        syncWithNow(); 
+        // Load Abbreviations
         const abbrBody = document.getElementById('abbrBody');
-        abbrBody.innerHTML = '';
         abbreviations.forEach(item => { 
             abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; 
         });
-    }
-
-    // Initial Load
-    window.onload = () => { 
-        syncWithNow(); 
-        loadAbbr();
         statusText.style.color = "var(--success)";
-        // Set up the interval once
         setInterval(tickClock, 60000); 
     };
 </script>
