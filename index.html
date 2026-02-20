@@ -30,8 +30,8 @@
         .tap-col { color: var(--gold); }
         .dur-col { color: #94a3b8; font-weight: 400; font-size: 0.95rem; }
         .tow-col { color: var(--accent); }
+        .adj-label { font-size: 0.7rem; color: var(--gold); vertical-align: middle; margin-left: 4px; }
 
-        /* Style for the 160 BAR safety row */
         .min-pressure-row { color: var(--danger) !important; }
         .min-pressure-row td { color: var(--danger) !important; border-bottom: 1px solid var(--danger); }
 
@@ -137,22 +137,26 @@
         const elapsed = parseInt(elapsedInput.value) || 0;
 
         baData.forEach(row => {
+            // TAP logic stays static
             const tap = (row.bar / 2) + 40; 
-            const remainingDur = Math.max(0, row.dur - elapsed);
+            
+            // Internal calculation for TOW
+            const calculationDur = Math.max(0, row.dur - elapsed);
             
             const time = new Date();
-            time.setHours(hrs, mins + remainingDur);
-            const tow = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
+            time.setHours(hrs, mins + calculationDur);
+            const towStr = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
 
-            // Apply red class if pressure is 160
+            // Add (Adj.) label only if elapsed > 0
+            const adjLabel = elapsed > 0 ? '<span class="adj-label">Adj.</span>' : '';
             const rowClass = row.bar === 160 ? 'class="min-pressure-row"' : '';
 
             tbody.innerHTML += `
                 <tr ${rowClass}>
                     <td>${row.bar}</td>
                     <td class="tap-col">${tap}</td>
-                    <td class="dur-col">${remainingDur}m</td>
-                    <td class="tow-col">${tow}</td>
+                    <td class="dur-col">${row.dur}m</td>
+                    <td class="tow-col">${towStr}${adjLabel}</td>
                 </tr>`;
         });
     }
