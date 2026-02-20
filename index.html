@@ -79,7 +79,7 @@
         <div id="elapsedContainer">
             <div class="label-text" style="margin-top:10px;">Minutes Already Elapsed</div>
             <div class="row">
-                <input type="number" id="elapsedMins" value="0" min="0">
+                <input type="number" id="elapsedMins" value="0">
                 <button class="btn-outline" onclick="resetElapsed()">CLEAR</button>
             </div>
         </div>
@@ -191,7 +191,9 @@
             time.setHours(hrs, mins + calcDur);
             
             const towStr = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
-            const adj = elapsed > 0 ? `<span class="adj-label">(Adj.)</span>` : '';
+            
+            // FIX: Show (Adj.) if elapsed is anything other than 0
+            const adj = elapsed !== 0 ? `<span class="adj-label">(Adj.)</span>` : '';
             const rowClass = row.bar === 160 ? 'class="min-pressure-row"' : '';
 
             tbody.innerHTML += `
@@ -204,19 +206,13 @@
         });
     }
 
-    // ANDROID COMPATIBILITY LISTENERS
-    // 'change' triggers when the Android Time Picker closes
     entryInput.addEventListener('change', renderTable);
-    // 'input' triggers during keyboard entry
     entryInput.addEventListener('input', renderTable);
-    // 'blur' is a fallback for when focus leaves the element
     entryInput.addEventListener('blur', renderTable);
-    
     elapsedInput.addEventListener('input', renderTable);
 
     window.onload = () => { 
         syncWithNow(); 
-        // Load Abbreviations
         const abbrBody = document.getElementById('abbrBody');
         abbreviations.forEach(item => { 
             abbrBody.innerHTML += `<tr><td class="code">${item[0]}</td><td>${item[1]}</td></tr>`; 
